@@ -2128,7 +2128,7 @@ Sub CreateNewBall()
 	
 	PlungerKicker.CreateBall: AddTrackedBall(PlungerKicker)
 	
-	If (bOnTheFirstBall = TRUE) Then	PlaySound "fx_Whip2": LightSeqPF.Play SeqBlinking, , 1, 200 : FF_Sound DV_RF,-1, "fx_Whip2"
+	If (bOnTheFirstBall = TRUE) Then	PlaySound "fx_Whip2": LightSeqPF.Play SeqBlinking, , 1, 200 : FF_Sound DV_RS,-1, "fx_Whip2" 'Trigger right slinger solenoid on ball launch
 
 	'If (NewBall = TRUE) and (BallSaved = FALSE) Then NewBall = FALSE: RestartMusic.set TRUE, 100
 	LOut = FALSE: ROut = FALSE
