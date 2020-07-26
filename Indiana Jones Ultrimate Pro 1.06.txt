@@ -1,3 +1,4 @@
+
 ' ********************************************************************
 ' **                                                                **
 ' **                        FUTURE PINBALL                          **
@@ -22,6 +23,9 @@
 ' GLXB & Highlnder00 - original WIP build
 ' SLAMT1LT - ULTIMATE Pro edition (code, rules, audio, art, LCD)
 
+' DOF v0.1 by Ashram56
+' DOF functions implemented: targets, bumpers, slingers, shaker for Ark hit
+' Functions to be implemented: side ramp targets, special game events triggers, SSF
 
 ' ** ULTIMATE Pro Version 1.06 **
 
@@ -808,10 +812,16 @@ OverlayMovie.UpdateInterval = 68
 OverlayMovie2.UpdateInterval = 68
 LCD.UpdateInterval = 68
 
+ExecuteGlobal LoadExternalScript("DOFLinx.vbs")
 
 ' when the machine is first powered on, play something fun (first time only)...
 
 Sub FuturePinball_BeginPlay()
+
+FF_Init
+	FF_DOFLinx=1  ' Set this to 0 to manually disable the link to DOFLinx.
+                 ' DOFLinx must be active and set to link for this to make a difference
+
 	Randomize
 
 	Swordsman.anglexz = 245 ' make sure he's not out and ready to attack (sneaky sod)...
@@ -891,7 +901,9 @@ End Sub
 
 Sub FuturePinball_KeyPressed(ByVal KeyCode)
 
-
+     FF_Button BUT_CN,BA_OFF,0,0   'DOFLinx - Coin Light - OFF
+		FF_DEV DV_SR,30  'DOFLinx - STROBE - Coin inserted
+		FF_Button BUT_ST,BA_FL,1000,50   'DOFLinx - Start Button - Flashing - Coin inserted
 
 
 	' *** TEST STUFF ***
@@ -1083,6 +1095,7 @@ Sub FuturePinball_KeyPressed(ByVal KeyCode)
 	If (KeyCode = GetKeyCode(InsertCoinKey)) Then
 		nvCredits = nvCredits + 1
 		If (fpGameInPlay = FALSE) Then
+			FF_Button BUT_ST,BA_FL,0,0 
 			Select Case nvCredits
 				Case 1,2,3,4: PlaySound "fx_CoinIn"
 				Case 5: PlayMusic 2, "fx_IndyCoin"
@@ -1114,7 +1127,8 @@ Sub FuturePinball_KeyPressed(ByVal KeyCode)
 					Plunger.SolenoidPulse
 					If (bBallInPlungerLane = TRUE) Then
 						PlaySound "fx_BallLaunch"
-						playsound "fx_GunShot2"
+						' playsound "fx_GunShot2"
+						FF_Sound DV_RS,-1,"fx_GunShot2"
 						BulbArkL.FlashForMs 300, 150, BulbOff
 						BulbArkR.FlashForMs 300, 150, BulbOff
 						FlasherRed.FlashForMs 300, 150, BulbOff
@@ -1129,8 +1143,12 @@ Sub FuturePinball_KeyPressed(ByVal KeyCode)
 				If (BallsOnPlayfield =>1) Then
 					If (Flipped = TRUE) Then
 						RightFlipper.SolenoidOn
+						FF_Sound DV_RF,1000,"Flipper"    ' Turn on the right flipper for upto 10 seconds (realistically until thge key is lifted
+						FF_Flasher DV_FLIR,FL_FL,2,20,100,"Random"  'DOFLinx - Flipper Flasher - Random
 					Else
 						LeftFlipper.SolenoidOn
+						FF_Sound DV_LF,1000,"Flipper"    ' Turn on the left flipper for upto 10 seconds (realistically until thge key is lifted
+						FF_Flasher DV_FLIL,FL_FL,2,20,100,"Random"  'DOFLinx - Flipper Flasher - Random
 					End If
 					If (StatusActive = TRUE) Then
 						ShowStatusTimer_Expired()
@@ -1172,8 +1190,12 @@ Sub FuturePinball_KeyPressed(ByVal KeyCode)
 				If (BallsOnPlayfield =>1) Then
 					If (Flipped = TRUE) Then
 						LeftFlipper.SolenoidOn
+						FF_Sound DV_LF,1000,"Flipper"    ' Turn on the left flipper for upto 10 seconds (realistically until thge key is lifted
+						FF_Flasher DV_FLIL,FL_FL,2,20,100,"Random"  'DOFLinx - Flipper Flasher - Random
 					Else
 						RightFlipper.SolenoidOn
+						FF_Sound DV_RF,1000,"Flipper"    ' Turn on the right flipper for upto 10 seconds (realistically until thge key is lifted
+						FF_Flasher DV_FLIR,FL_FL,2,20,100,"Random"  'DOFLinx - Flipper Flasher - Random
 					End If
 					ShowMe = 0: ShowStatusTimer.Set TRUE, 5000
 				End If
@@ -1278,15 +1300,23 @@ Sub FuturePinball_KeyReleased(ByVal KeyCode)
 			If (KeyCode = GetKeyCode(LeftFlipperKey)) Then
 				If (Flipped = TRUE) Then
 					RightFlipper.SolenoidOff
+		            FF_Dev DV_RF,0    ' Turn the flipper solenoids off
+					
 				Else
 					LeftFlipper.SolenoidOff
+					FF_Dev DV_LF,0    ' Turn the flipper solenoids off
+
 				End If
 			End If
 			If (KeyCode = GetKeyCode(RightFlipperKey)) Then
 				If (Flipped = TRUE) Then
 					LeftFlipper.SolenoidOff
+					FF_Dev DV_LF,0    ' Turn the flipper solenoids off
+
 				Else
 					RightFlipper.SolenoidOff
+		            FF_Dev DV_RF,0    ' Turn the flipper solenoids off
+
 				End If
 				ShowMe = 0: ShowStatusTimer.Enabled = FALSE: StatusActive = FALSE
 			End If
@@ -1316,6 +1346,7 @@ End Sub
 
 Sub FuturePinball_TiltWarning(ByVal Warnings)
 	dim tq
+	FF_Colour "Red",RGB_FL,150  ' DOFLinx - RGB Lighting - Flash - Red
 	PlaySound "fx_Nudge": SlingBlockTimer.Set TRUE, 2000: SlingStop = TRUE
 	Select Case Warnings
 		Case 1:
@@ -1385,6 +1416,9 @@ Sub FuturePinball_Tilted()
 	xBAM.Camera.DesktopRelease 500
 	LeftFlipper.SolenoidOff
 	RightFlipper.SolenoidOff
+		FF_Dev DV_LF,0    ' Turn the flipper solenoids off
+		FF_Dev DV_RF,0    ' Turn the flipper solenoids off
+
 	FlushDMDTimer_Expired(): ShowMe = 0
 	SpotArk.State = BulbOff
 	FlasherArkSpot.State = BulbOff
@@ -2091,9 +2125,10 @@ End Sub
 
 
 Sub CreateNewBall()
+	
 	PlungerKicker.CreateBall: AddTrackedBall(PlungerKicker)
 	
-	If (bOnTheFirstBall = TRUE) Then	PlaySound "fx_Whip2": LightSeqPF.Play SeqBlinking, , 1, 200
+	If (bOnTheFirstBall = TRUE) Then	PlaySound "fx_Whip2": LightSeqPF.Play SeqBlinking, , 1, 200 : FF_Sound DV_RS,-1, "fx_Whip2" 'Trigger right slinger solenoid on ball launch
 
 	'If (NewBall = TRUE) and (BallSaved = FALSE) Then NewBall = FALSE: RestartMusic.set TRUE, 100
 	LOut = FALSE: ROut = FALSE
@@ -3236,6 +3271,9 @@ Sub BonusBallTimer_Expired()
 	'LightSeqPF.Play SeqAllOff
 	LeftFlipper.SolenoidOff
 	RightFlipper.SolenoidOff
+		FF_Dev DV_LF,0    ' Turn the flipper solenoids off
+		FF_Dev DV_RF,0    ' Turn the flipper solenoids off
+
 	FlushDMDTimer_Expired(): ShowMe = 0
 	SpotArk.State = BulbOff
 	FlasherArkSpot.State = BulbOff
@@ -3445,6 +3483,9 @@ Sub EndOfGame()
 
 	LeftFlipper.SolenoidOff
 	RightFlipper.SolenoidOff
+		FF_Dev DV_LF,0    ' Turn the flipper solenoids off
+		FF_Dev DV_RF,0    ' Turn the flipper solenoids off
+
 
 	AttPlay = 0: AttractTimer.Set TRUE, 5000
 End Sub
@@ -3945,6 +3986,8 @@ End Sub
 
 Sub LeftSlingshotRubber_Hit()
 	If (fpTilted = TRUE) Then Exit Sub
+	FF_Sound DV_LS,-1,"fx_SlingL"   'DOFLinx Left Slingshot
+	FF_Flasher DV_FLOL,FL_FL,2,20,100,"Random"  'DOFLinx - Outer Left Flasher - Random
 	PlaySound "fx_BulletHit2"
 	LeftSlingshotBulb1.FlashForMs 250, 125, BulbOn
 	LeftSlingshotBulb2.FlashForMs 250, 125, BulbOn
@@ -3975,6 +4018,8 @@ End Sub
 
 Sub RightSlingshotRubber_Hit()
 	If (fpTilted = TRUE) Then Exit Sub
+	FF_Sound DV_RS,-1,"fx_SlingL"   'DOFLinx Right Slingshot
+	FF_Flasher DV_FLOR,FL_FL,2,20,100,"Random"  'DOFLinx - Right Left Flasher - Random
 	PlaySound "fx_BulletHit4"
 	RightSlingshotBulb1.FlashForMs 250, 125, BulbOn
 	RightSlingshotBulb2.FlashForMs 250, 125, BulbOn
@@ -4603,7 +4648,9 @@ Sub TriggerArk_Hit() ' opto trigger...
 		ArkHitsRemain(CP) = ArkHitsRemain(CP) - 1
 		PauseTimers()
 		AddScore(1000000)
-		PlaySound "fx_Impact"
+		' PlaySound "fx_Impact"
+		FF_Sound DV_SH,100,"fx_Impact"
+		
 		PlaySound "fx_IdolTrap2"
 		PauseTimers(): ResumeTimers.Set TRUE, 4300
 		EffectMusic 1, SetVolume, 0, 100
@@ -4715,7 +4762,9 @@ Sub TriggerArk_Hit() ' opto trigger...
 
 		' grab the raft...
 		If (ModeName = "TScene2") Then
-			PlaySound "fx_Impact"
+			' PlaySound "fx_Impact"
+			FF_Sound DV_SH,100,"fx_Impact"
+
 			ModeHit = ModeHit + 1: TempleSceneHit()
 			ArkHitFlash()
 		Exit Sub
@@ -4723,7 +4772,9 @@ Sub TriggerArk_Hit() ' opto trigger...
 
 		If (ModeName = "CScene1") Then
 			LightArk.State = BulbOff
-			PlaySound "fx_Impact"
+			' PlaySound "fx_Impact"
+			FF_Sound DV_SH,100,"fx_Impact"
+
 			MusicFade(1000): PlayMusic 3, "Music_Cue11"
 			NoS(): OverlayLCD.UpdateInterval = 150
 			OverlayLCD.Frame 89, 90, 89: LCD.Frame 89,90,89: MovieTimer.Set TRUE, 2000
@@ -5182,15 +5233,26 @@ Sub BoobyTrap()
 		MagnetActive = TRUE
 		CoolDownTimer.Set TRUE, 2000
 	End If
-	Select Case RandomNumber(7)
-		Case 1: PlaySound "fx_Ricochet2"
-		Case 2: PlaySound "fx_Ricochet3"
-		Case 3: PlaySound "fx_Ricochet4"
-		Case 4: PlaySound "fx_Ricochet5"
-		Case 5: PlaySound "fx_Ricochet6"
-		Case 6: PlaySound "fx_Ricochet7"
-		Case 7: PlaySound "fx_Ricochet10"
+	'Select Case RandomNumber(7)
+	'	Case 1: PlaySound "fx_Ricochet2" 
+	'	Case 2: PlaySound "fx_Ricochet3"
+	'	Case 3: PlaySound "fx_Ricochet4"
+	'	Case 4: PlaySound "fx_Ricochet5"
+	'	Case 5: PlaySound "fx_Ricochet6"
+	'	Case 6: PlaySound "fx_Ricochet7"
+	'	Case 7: PlaySound "fx_Ricochet10"
+	'End Select
+
+Select Case RandomNumber(7)
+		Case 1: FF_Sound DV_BC,-1,"fx_Ricochet2"
+		Case 2: FF_Sound DV_BC,-1,"fx_Ricochet3"
+		Case 3: FF_Sound DV_BC,-1,"fx_Ricochet4"
+		Case 4: FF_Sound DV_BC,-1,"fx_Ricochet5"
+		Case 5: FF_Sound DV_BC,-1,"fx_Ricochet6"
+		Case 6: FF_Sound DV_BC,-1,"fx_Ricochet7"
+		Case 7: FF_Sound DV_BC,-1,"fx_Ricochet10"
 	End Select
+
 	AddScore(1000)
 	set LastSwitchHit = TgtArk7
 End Sub
@@ -5214,11 +5276,14 @@ Sub ArkMagnetTrig_Hit()
 	If (MagnetActive = TRUE) Then
 		MagnetActive = FALSE
 		Select Case TrigHit
-			Case 1: PlaySound "fx_ArkHit"
-			Case 2: PlaySound "fx_ArkHit2"
-			Case 3: PlaySound "fx_ArkHit3": TrigHit = 0
+			Case 1: ' PlaySound "fx_ArkHit"
+			Case 2: ' PlaySound "fx_ArkHit2"
+			Case 3: ' PlaySound "fx_ArkHit3": TrigHit = 0
 		End Select
-		PlaySound "fx_Electric", 0.3
+		
+		' PlaySound "fx_Electric", 0.3
+		FF_Sound DV_SH,200,"fx_Electric"
+
 		BulbMagnet.State = BulbOn
 		PlaySound "fx_Hum", 0.7
 		ArkMagnet.MaxForce = 10
@@ -6252,7 +6317,8 @@ End Sub
 Sub ThreeBallTimer_Expired()
 	ThreeBallTimer.Set FALSE
 	Plunger.SolenoidPulse
-	PlaySound "fx_BallLaunch"
+	' PlaySound "fx_BallLaunch"
+	FF_Sound DV_RS,-1, "fx_BallLaunch"
 	BallCreateTimer.Set TRUE, 500
 	TwoBallTimer.Set TRUE, 1500
 End Sub
@@ -6263,7 +6329,8 @@ End Sub
 Sub TwoBallTimer_Expired()
 	TwoBallTimer.Set FALSE
 	Plunger.SolenoidPulse
-	PlaySound "fx_BallLaunch"
+	' PlaySound "fx_BallLaunch"
+	FF_Sound DV_RS,-1, "fx_BallLaunch"
 	BallCreateTimer.Set TRUE, 500
 	OneBallTimer.Set TRUE, 1500
 	If (MovieTimer.Enabled = FALSE) and (ModeName = "TScene3") Then
@@ -6276,7 +6343,8 @@ End Sub
 Sub OneBallTimer_Expired()
 	OneBallTimer.Set FALSE
 	Plunger.SolenoidPulse
-	PlaySound "fx_BallLaunch"
+	' PlaySound "fx_BallLaunch"
+	FF_Sound DV_RS,-1, "fx_BallLaunch"
 	PlaySound "fx_GunShot6"
 End Sub
 
@@ -6288,6 +6356,8 @@ Sub BallCreateTimer_Expired()
 	BallLaunched = FALSE
 	BallsOnPlayfield = BallsOnPlayfield + 1
 	PlungerKicker.SolenoidPulse
+	FF_Sound DV_RF,-1, "fx_BallLaunch"
+
 End Sub
 
 
@@ -6386,6 +6456,10 @@ Sub ModeTimer_Expired()
 			fpTilted = TRUE: Nuke = TRUE
 			LeftFlipper.SolenoidOff
 			RightFlipper.SolenoidOff
+			
+			FF_Dev DV_LF,0    ' Turn the flipper solenoids off
+			FF_Dev DV_RF,0    ' Turn the flipper solenoids off
+			
 			ScoreUpdate = FALSE: FlushDMDTimer.Set TRUE, 5000
 			DispDMD1.QueueText "[edge3][f6][xc][yc][b]OUT OF TIME", deNone, 2500, FALSE
 			DispDMD2.QueueText "[edge3][f6][xc][yc][b]OUT OF TIME", deNone, 2500, FALSE
@@ -8839,11 +8913,15 @@ Sub CheckCRUSADE()
 						GrailKickerTimer.Set TRUE, T
 					End If
 				Else
-					PlaySound "fx_Impact"
+					' PlaySound "fx_Impact"
+					FF_Sound DV_SH,50,"fx_Impact"
+
 					GrailKickerTimer.Set TRUE, 600
 				End If
 			Else
 				PlaySound "fx_Impact"
+				FF_Sound DV_SH,100,"fx_Impact"
+
 				If (BulbMystery.State = BulbOn) Then ' start mystery if lit straight after...
 					MovieTimer.Enabled = FALSE
 					ReHitGrail.Set TRUE, 1000
@@ -10630,50 +10708,94 @@ End Sub
 
 
 
+'Sub RndPunch()
+'	Select Case RandomNumber(5)
+'		Case 1: PlaySound "fx_Punch", 0.8
+'		Case 2: PlaySound "fx_Punch2", 0.8
+'		Case 3: PlaySound "fx_Punch5", 0.8
+'		Case 4: PlaySound "fx_Punch6", 0.8
+'		Case 5: PlaySound "fx_Punch7", 0.8
+'	End Select
+'End Sub
+
 Sub RndPunch()
 	Select Case RandomNumber(5)
-		Case 1: PlaySound "fx_Punch", 0.8
-		Case 2: PlaySound "fx_Punch2", 0.8
-		Case 3: PlaySound "fx_Punch5", 0.8
-		Case 4: PlaySound "fx_Punch6", 0.8
-		Case 5: PlaySound "fx_Punch7", 0.8
+		Case 1: FF_Sound DV_ML,-1,"fx_Punch"
+		Case 2: FF_Sound DV_ML,-1,"fx_Punch2"
+		Case 3: FF_Sound DV_ML,-1,"fx_Punch5"
+		Case 4: FF_Sound DV_ML,-1,"fx_Punch6"
+		Case 5: FF_Sound DV_ML,-1,"fx_Punch7"
 	End Select
 End Sub
 
+
+'Sub RndRicochet()
+'	Select Case RandomNumber(5)
+'		Case 1: PlaySound "fx_Ricochet2"
+'		Case 2: PlaySound "fx_Ricochet3"
+'		Case 3: PlaySound "fx_Ricochet4"
+'		Case 4: PlaySound "fx_Ricochet6"
+'		Case 5: PlaySound "fx_Ricochet10"
+'	End Select
+'End Sub
 
 Sub RndRicochet()
 	Select Case RandomNumber(5)
-		Case 1: PlaySound "fx_Ricochet2"
-		Case 2: PlaySound "fx_Ricochet3"
-		Case 3: PlaySound "fx_Ricochet4"
-		Case 4: PlaySound "fx_Ricochet6"
-		Case 5: PlaySound "fx_Ricochet10"
+		Case 1: FF_Sound DV_ML,-1,"fx_Ricochet2"
+		Case 2: FF_Sound DV_ML,-1,"fx_Ricochet3"
+		Case 3: FF_Sound DV_ML,-1,"fx_Ricochet4"
+		Case 4: FF_Sound DV_ML,-1,"fx_Ricochet6"
+		Case 5: FF_Sound DV_ML,-1,"fx_Ricochet10"
 	End Select
 End Sub
 
+
+'Sub RndBulletHit()
+'	Select Case RandomNumber(6)
+'		Case 1: PlaySound "fx_BulletHit", 0.8
+'		Case 2: PlaySound "fx_BulletHit2", 0.8
+'		Case 3: PlaySound "fx_BulletHit3", 0.8
+'		Case 4: PlaySound "fx_BulletHit4", 0.8
+'		Case 5: PlaySound "fx_BulletHit5", 0.8
+'		Case 6: PlaySound "fx_BulletHit6", 0.8
+'	End Select
+'End Sub
 
 Sub RndBulletHit()
 	Select Case RandomNumber(6)
-		Case 1: PlaySound "fx_BulletHit", 0.8
-		Case 2: PlaySound "fx_BulletHit2", 0.8
-		Case 3: PlaySound "fx_BulletHit3", 0.8
-		Case 4: PlaySound "fx_BulletHit4", 0.8
-		Case 5: PlaySound "fx_BulletHit5", 0.8
-		Case 6: PlaySound "fx_BulletHit6", 0.8
+		Case 1: FF_Sound DV_ML,-1,"fx_BulletHit"
+		Case 2: FF_Sound DV_ML,-1,"fx_BulletHit2"
+		Case 3: FF_Sound DV_ML,-1,"fx_BulletHit3"
+		Case 4: FF_Sound DV_ML,-1,"fx_BulletHit4"
+		Case 5: FF_Sound DV_ML,-1,"fx_BulletHit5"
+		Case 6: FF_Sound DV_ML,-1,"fx_BulletHit6"
 	End Select
 End Sub
 
 
+'Sub RndJungle()
+'	Select Case RandomNumber(8)
+'		Case 1: PlaySound "fx_Jungle1"
+'		Case 2: PlaySound "fx_Jungle2"
+'		Case 3: PlaySound "fx_Jungle3"
+'		Case 4: PlaySound "fx_Jungle4"
+'		Case 5: PlaySound "fx_Jungle5"
+'		Case 6: PlaySound "fx_Jungle6"
+'		Case 7: PlaySound "fx_Jungle7"
+'		Case 8: PlaySound "fx_JungleShort"
+'	End Select
+'End Sub
+
 Sub RndJungle()
 	Select Case RandomNumber(8)
-		Case 1: PlaySound "fx_Jungle1"
-		Case 2: PlaySound "fx_Jungle2"
-		Case 3: PlaySound "fx_Jungle3"
-		Case 4: PlaySound "fx_Jungle4"
-		Case 5: PlaySound "fx_Jungle5"
-		Case 6: PlaySound "fx_Jungle6"
-		Case 7: PlaySound "fx_Jungle7"
-		Case 8: PlaySound "fx_JungleShort"
+		Case 1: FF_Sound DV_ML,-1,"fx_Jungle1"
+		Case 2: FF_Sound DV_ML,-1,"fx_Jungle2"
+		Case 3: FF_Sound DV_ML,-1,"fx_Jungle3"
+		Case 4: FF_Sound DV_ML,-1,"fx_Jungle4"
+		Case 5: FF_Sound DV_ML,-1,"fx_Jungle5"
+		Case 6: FF_Sound DV_ML,-1,"fx_Jungle6"
+		Case 7: FF_Sound DV_ML,-1,"fx_Jungle7"
+		Case 8: FF_Sound DV_ML,-1,"fx_JungleShort"
 	End Select
 End Sub
 
@@ -11237,7 +11359,8 @@ End Sub
 
 Sub Bumper1_Hit() ' temple
 
-	PlaySound "fx_Bumper"
+	' PlaySound "fx_Bumper"
+	FF_Sound DV_BC,-1, "fx_Bumper"
 	PBL1.SolenoidPulse 
 	PBL2.SolenoidPulse 
 	PBL3.SolenoidPulse
@@ -11292,6 +11415,17 @@ End Sub
 
 Sub Bumper2_Hit() ' raiders
 
+
+	' PlaySound "fx_Bumper"
+	FF_Sound DV_BL,-1, "fx_Bumper"
+	PBR1.SolenoidPulse
+	PBR2.SolenoidPulse 
+	PBR3.SolenoidPulse
+	PBR4.SolenoidPulse 
+	PBR5.SolenoidPulse
+	PBR6.SolenoidPulse 
+	BRR.PopDown: BumpRTimer.Set TRUE, 150
+
 	If (fpTilted = TRUE) or (BonusBall = TRUE) Then Exit Sub
 
 	GIFlash1.State = BulbOff: GIFlash2.State = BulbOff: ResetGI.Set TRUE, 150
@@ -11345,7 +11479,8 @@ End Sub
 
 Sub Bumper3_Hit() 'crystal
 
-	PlaySound "fx_Bumper"
+	' PlaySound "fx_Bumper"
+	FF_Sound DV_BL,-1, "fx_Bumper"
 	PBR1.SolenoidPulse
 	PBR2.SolenoidPulse 
 	PBR3.SolenoidPulse
@@ -11406,7 +11541,8 @@ End Sub
 
 Sub Bumper4_Hit() 'crusade
 
-	PlaySound "fx_Bumper"
+	' PlaySound "fx_Bumper"
+	FF_Sound DV_BR,-1, "fx_Bumper"
 	PBC1.SolenoidPulse 
 	PBC2.SolenoidPulse 
 	PBC3.SolenoidPulse
@@ -15225,8 +15361,9 @@ Sub Plungertimer_expired()
 	Plunger.SolenoidPulse
 	LightSeqPF.Play SeqBlinking, , 2, 100
 	Flash = 3: FlashPFTimer.Set TRUE, 100
-	PlaySound "fx_BallLaunch"
-	playsound "fx_GunShot2"	
+	' PlaySound "fx_BallLaunch"
+	FF_Sound DV_RS,-1, "fx_BallLaunch"	
+	playsound "fx_GunShot2"
 	PlungerTimer.Set FALSE
 End Sub
 
@@ -16213,6 +16350,5 @@ Sub MovieTimer_Expired()
 	' nothing is active, basic display...
 	If (ModeName = "") Then OverlayLCD.Frame 184: LCD.Frame 184: Exit Sub ' main logo display only...
 End Sub
-
 
 
