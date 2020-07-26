@@ -10708,7 +10708,8 @@ Sub INDYLightsTimer_Expired()
 	End If
 End Sub
 
-
+' DOFLinx implementation notes: the following functions seem to be called for both left target and right target (Indy and Jones).
+' Instead of duplicating them to separate left and right and adjust function calls (prone to error), I'm simply using the middle center solenoid
 
 'Sub RndPunch()
 '	Select Case RandomNumber(5)
@@ -10722,11 +10723,11 @@ End Sub
 
 Sub RndPunch()
 	Select Case RandomNumber(5)
-		Case 1: FF_Sound DV_ML,-1,"fx_Punch"
-		Case 2: FF_Sound DV_ML,-1,"fx_Punch2"
-		Case 3: FF_Sound DV_ML,-1,"fx_Punch5"
-		Case 4: FF_Sound DV_ML,-1,"fx_Punch6"
-		Case 5: FF_Sound DV_ML,-1,"fx_Punch7"
+		Case 1: FF_Sound DV_MC,-1,"fx_Punch"
+		Case 2: FF_Sound DV_MC,-1,"fx_Punch2"
+		Case 3: FF_Sound DV_MC,-1,"fx_Punch5"
+		Case 4: FF_Sound DV_MC,-1,"fx_Punch6"
+		Case 5: FF_Sound DV_MC,-1,"fx_Punch7"
 	End Select
 End Sub
 
@@ -10743,11 +10744,11 @@ End Sub
 
 Sub RndRicochet()
 	Select Case RandomNumber(5)
-		Case 1: FF_Sound DV_ML,-1,"fx_Ricochet2"
-		Case 2: FF_Sound DV_ML,-1,"fx_Ricochet3"
-		Case 3: FF_Sound DV_ML,-1,"fx_Ricochet4"
-		Case 4: FF_Sound DV_ML,-1,"fx_Ricochet6"
-		Case 5: FF_Sound DV_ML,-1,"fx_Ricochet10"
+		Case 1: FF_Sound DV_MC,-1,"fx_Ricochet2"
+		Case 2: FF_Sound DV_MC,-1,"fx_Ricochet3"
+		Case 3: FF_Sound DV_MC,-1,"fx_Ricochet4"
+		Case 4: FF_Sound DV_MC,-1,"fx_Ricochet6"
+		Case 5: FF_Sound DV_MC,-1,"fx_Ricochet10"
 	End Select
 End Sub
 
@@ -10765,12 +10766,12 @@ End Sub
 
 Sub RndBulletHit()
 	Select Case RandomNumber(6)
-		Case 1: FF_Sound DV_ML,-1,"fx_BulletHit"
-		Case 2: FF_Sound DV_ML,-1,"fx_BulletHit2"
-		Case 3: FF_Sound DV_ML,-1,"fx_BulletHit3"
-		Case 4: FF_Sound DV_ML,-1,"fx_BulletHit4"
-		Case 5: FF_Sound DV_ML,-1,"fx_BulletHit5"
-		Case 6: FF_Sound DV_ML,-1,"fx_BulletHit6"
+		Case 1: FF_Sound DV_MC,-1,"fx_BulletHit"
+		Case 2: FF_Sound DV_MC,-1,"fx_BulletHit2"
+		Case 3: FF_Sound DV_MC,-1,"fx_BulletHit3"
+		Case 4: FF_Sound DV_MC,-1,"fx_BulletHit4"
+		Case 5: FF_Sound DV_MC,-1,"fx_BulletHit5"
+		Case 6: FF_Sound DV_MC,-1,"fx_BulletHit6"
 	End Select
 End Sub
 
@@ -10790,14 +10791,14 @@ End Sub
 
 Sub RndJungle()
 	Select Case RandomNumber(8)
-		Case 1: FF_Sound DV_ML,-1,"fx_Jungle1"
-		Case 2: FF_Sound DV_ML,-1,"fx_Jungle2"
-		Case 3: FF_Sound DV_ML,-1,"fx_Jungle3"
-		Case 4: FF_Sound DV_ML,-1,"fx_Jungle4"
-		Case 5: FF_Sound DV_ML,-1,"fx_Jungle5"
-		Case 6: FF_Sound DV_ML,-1,"fx_Jungle6"
-		Case 7: FF_Sound DV_ML,-1,"fx_Jungle7"
-		Case 8: FF_Sound DV_ML,-1,"fx_JungleShort"
+		Case 1: FF_Sound DV_MC,-1,"fx_Jungle1"
+		Case 2: FF_Sound DV_MC,-1,"fx_Jungle2"
+		Case 3: FF_Sound DV_MC,-1,"fx_Jungle3"
+		Case 4: FF_Sound DV_MC,-1,"fx_Jungle4"
+		Case 5: FF_Sound DV_MC,-1,"fx_Jungle5"
+		Case 6: FF_Sound DV_MC,-1,"fx_Jungle6"
+		Case 7: FF_Sound DV_MC,-1,"fx_Jungle7"
+		Case 8: FF_Sound DV_MC,-1,"fx_JungleShort"
 	End Select
 End Sub
 
@@ -10822,16 +10823,29 @@ End Sub
 ' TScene3 - minecart kill (act 2)
 
 
+'Sub RndGunShot()
+'	Select Case RandomNumber(8)
+'		Case 1: PlaySound "fx_GunShot2"
+'		Case 2: PlaySound "fx_GunShot3"
+'		Case 3: PlaySound "fx_GunShot4"
+'		Case 4: PlaySound "fx_GunShot5"
+'		Case 5: PlaySound "fx_GunShot6"
+'		Case 6: PlaySound "fx_GunShot7"
+'		Case 7: PlaySound "fx_GunShot8"
+'		Case 8: PlaySound "fx_GunShot9"
+'	End Select
+'End Sub
+
 Sub RndGunShot()
 	Select Case RandomNumber(8)
-		Case 1: PlaySound "fx_GunShot2"
-		Case 2: PlaySound "fx_GunShot3"
-		Case 3: PlaySound "fx_GunShot4"
-		Case 4: PlaySound "fx_GunShot5"
-		Case 5: PlaySound "fx_GunShot6"
-		Case 6: PlaySound "fx_GunShot7"
-		Case 7: PlaySound "fx_GunShot8"
-		Case 8: PlaySound "fx_GunShot9"
+		Case 1: FF_SOUND DV_MC,"fx_GunShot2"
+		Case 2: FF_SOUND DV_MC, "fx_GunShot3"
+		Case 3: FF_SOUND DV_MC, "fx_GunShot4"
+		Case 4: FF_SOUND DV_MC, "fx_GunShot5"
+		Case 5: FF_SOUND DV_MC, "fx_GunShot6"
+		Case 6: FF_SOUND DV_MC, "fx_GunShot7"
+		Case 7: FF_SOUND DV_MC, "fx_GunShot8"
+		Case 8: FF_SOUND DV_MC, "fx_GunShot9"
 	End Select
 End Sub
 
