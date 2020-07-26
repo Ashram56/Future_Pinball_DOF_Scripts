@@ -3986,9 +3986,10 @@ End Sub
 
 Sub LeftSlingshotRubber_Hit()
 	If (fpTilted = TRUE) Then Exit Sub
-	FF_Sound DV_LS,-1,"fx_SlingL"   'DOFLinx Left Slingshot
+	'PlaySound "fx_BulletHit2"
+	FF_Sound DV_LS,-1,"fx_BulletHit2"   'Left Slingshot
 	FF_Flasher DV_FLOL,FL_FL,2,20,100,"Random"  'DOFLinx - Outer Left Flasher - Random
-	PlaySound "fx_BulletHit2"
+	
 	LeftSlingshotBulb1.FlashForMs 250, 125, BulbOn
 	LeftSlingshotBulb2.FlashForMs 250, 125, BulbOn
 	Bulb63.FlashForMs 250, 125, BulbOn
@@ -4018,9 +4019,10 @@ End Sub
 
 Sub RightSlingshotRubber_Hit()
 	If (fpTilted = TRUE) Then Exit Sub
-	FF_Sound DV_RS,-1,"fx_SlingL"   'DOFLinx Right Slingshot
-	FF_Flasher DV_FLOR,FL_FL,2,20,100,"Random"  'DOFLinx - Right Left Flasher - Random
-	PlaySound "fx_BulletHit4"
+	'PlaySound "fx_BulletHit4"
+	FF_Sound DV_RS,-1,"fx_BulletHit4"   'DOFLinx Right Slingshot
+	FF_Flasher DV_FLOR,FL_FL,2,20,100,"Random"  'DOFLinx - Outer Right Flasher - Random
+	
 	RightSlingshotBulb1.FlashForMs 250, 125, BulbOn
 	RightSlingshotBulb2.FlashForMs 250, 125, BulbOn
 	Bulb1.FlashForMs 250, 125, BulbOn
